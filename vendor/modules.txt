@@ -1,4 +1,50 @@
+# gitee.com/zhaochuninhefei/gmgo v0.0.30 => github.com/lyedc/gmgo v0.0.1
+## explicit; go 1.17
+gitee.com/zhaochuninhefei/gmgo/ecbase
+gitee.com/zhaochuninhefei/gmgo/ecdsa_ext
+gitee.com/zhaochuninhefei/gmgo/gmhttp
+gitee.com/zhaochuninhefei/gmgo/gmhttp/httptrace
+gitee.com/zhaochuninhefei/gmgo/gmhttp/internal
+gitee.com/zhaochuninhefei/gmgo/gmhttp/internal/ascii
+gitee.com/zhaochuninhefei/gmgo/gmtls
+gitee.com/zhaochuninhefei/gmgo/internal/cpu
+gitee.com/zhaochuninhefei/gmgo/internal/nettrace
+gitee.com/zhaochuninhefei/gmgo/internal/subtle
+gitee.com/zhaochuninhefei/gmgo/internal/xor
+gitee.com/zhaochuninhefei/gmgo/sm2
+gitee.com/zhaochuninhefei/gmgo/sm3
+gitee.com/zhaochuninhefei/gmgo/sm4
+gitee.com/zhaochuninhefei/gmgo/utils
+gitee.com/zhaochuninhefei/gmgo/x509
+# gitee.com/zhaochuninhefei/zcgolog v0.0.22
+## explicit; go 1.17
+gitee.com/zhaochuninhefei/zcgolog/zclog
+# golang.org/x/crypto v0.14.0
+## explicit; go 1.17
+golang.org/x/crypto/chacha20
+golang.org/x/crypto/chacha20poly1305
+golang.org/x/crypto/cryptobyte
+golang.org/x/crypto/cryptobyte/asn1
+golang.org/x/crypto/curve25519
+golang.org/x/crypto/curve25519/internal/field
+golang.org/x/crypto/hkdf
+golang.org/x/crypto/internal/alias
+golang.org/x/crypto/internal/poly1305
+golang.org/x/crypto/sha3
 # golang.org/x/net v0.17.0
 ## explicit; go 1.17
+golang.org/x/net/http/httpguts
+golang.org/x/net/http/httpproxy
+golang.org/x/net/http2/hpack
+golang.org/x/net/idna
 golang.org/x/net/internal/socks
 golang.org/x/net/proxy
+# golang.org/x/sys v0.13.0
+## explicit; go 1.17
+golang.org/x/sys/cpu
+# golang.org/x/text v0.13.0
+## explicit; go 1.17
+golang.org/x/text/secure/bidirule
+golang.org/x/text/transform
+golang.org/x/text/unicode/bidi
+golang.org/x/text/unicode/norm

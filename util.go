@@ -8,8 +8,8 @@ import (
 	"crypto/rand"
 	"crypto/sha1" //#nosec G505 -- (CWE-327) https://datatracker.ietf.org/doc/html/rfc6455#page-54
 	"encoding/base64"
+	"gitee.com/zhaochuninhefei/gmgo/gmhttp"
 	"io"
-	"net/http"
 	"strings"
 	"unicode/utf8"
 )
@@ -199,7 +199,7 @@ func equalASCIIFold(s, t string) bool {
 
 // tokenListContainsValue returns true if the 1#token header with the given
 // name contains a token equal to value with ASCII case folding.
-func tokenListContainsValue(header http.Header, name string, value string) bool {
+func tokenListContainsValue(header gmhttp.Header, name string, value string) bool {
 headers:
 	for _, s := range header[name] {
 		for {
@@ -225,7 +225,7 @@ headers:
 }
 
 // parseExtensions parses WebSocket extensions from a header.
-func parseExtensions(header http.Header) []map[string]string {
+func parseExtensions(header gmhttp.Header) []map[string]string {
 	// From RFC 6455:
 	//
 	//  Sec-WebSocket-Extensions = extension-list

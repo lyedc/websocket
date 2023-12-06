@@ -9,7 +9,7 @@ import (
 	"errors"
 	"io"
 	"log"
-	"net/http"
+	"gitee.com/zhaochuninhefei/gmgo/gmhttp"
 	"net/url"
 	"strings"
 	"time"
@@ -57,7 +57,7 @@ type Upgrader struct {
 
 	// Error specifies the function for generating HTTP error responses. If Error
 	// is nil, then http.Error is used to generate the HTTP response.
-	Error func(w http.ResponseWriter, r *http.Request, status int, reason error)
+	Error func(w gmhttp.ResponseWriter, r *gmhttp.Request, status int, reason error)
 
 	// CheckOrigin returns true if the request Origin header is acceptable. If
 	// CheckOrigin is nil, then a safe default is used: return false if the
@@ -66,7 +66,7 @@ type Upgrader struct {
 	//
 	// A CheckOrigin function should carefully validate the request origin to
 	// prevent cross-site request forgery.
-	CheckOrigin func(r *http.Request) bool
+	CheckOrigin func(r *gmhttp.Request) bool
 
 	// EnableCompression specify if the server should attempt to negotiate per
 	// message compression (RFC 7692). Setting this value to true does not
@@ -75,19 +75,19 @@ type Upgrader struct {
 	EnableCompression bool
 }
 
-func (u *Upgrader) returnError(w http.ResponseWriter, r *http.Request, status int, reason string) (*Conn, error) {
+func (u *Upgrader) returnError(w gmhttp.ResponseWriter, r *gmhttp.Request, status int, reason string) (*Conn, error) {
 	err := HandshakeError{reason}
 	if u.Error != nil {
 		u.Error(w, r, status, err)
 	} else {
 		w.Header().Set("Sec-Websocket-Version", "13")
-		http.Error(w, http.StatusText(status), status)
+		gmhttp.Error(w, gmhttp.StatusText(status), status)
 	}
 	return nil, err
 }
 
 // checkSameOrigin returns true if the origin is not set or is equal to the request host.
-func checkSameOrigin(r *http.Request) bool {
+func checkSameOrigin(r *gmhttp.Request) bool {
 	origin := r.Header["Origin"]
 	if len(origin) == 0 {
 		return true
@@ -99,7 +99,7 @@ func checkSameOrigin(r *http.Request) bool {
 	return equalASCIIFold(u.Host, r.Host)
 }
 
-func (u *Upgrader) selectSubprotocol(r *http.Request, responseHeader http.Header) string {
+func (u *Upgrader) selectSubprotocol(r *gmhttp.Request, responseHeader gmhttp.Header) string {
 	if u.Subprotocols != nil {
 		clientProtocols := Subprotocols(r)
 		for _, clientProtocol := range clientProtocols {
@@ -123,27 +123,27 @@ func (u *Upgrader) selectSubprotocol(r *http.Request, responseHeader http.Header
 //
 // If the upgrade fails, then Upgrade replies to the client with an HTTP error
 // response.
-func (u *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request, responseHeader http.Header) (*Conn, error) {
+func (u *Upgrader) Upgrade(w gmhttp.ResponseWriter, r *gmhttp.Request, responseHeader gmhttp.Header) (*Conn, error) {
 	const badHandshake = "websocket: the client is not using the websocket protocol: "
 
 	if !tokenListContainsValue(r.Header, "Connection", "upgrade") {
-		return u.returnError(w, r, http.StatusBadRequest, badHandshake+"'upgrade' token not found in 'Connection' header")
+		return u.returnError(w, r, gmhttp.StatusBadRequest, badHandshake+"'upgrade' token not found in 'Connection' header")
 	}
 
 	if !tokenListContainsValue(r.Header, "Upgrade", "websocket") {
-		return u.returnError(w, r, http.StatusBadRequest, badHandshake+"'websocket' token not found in 'Upgrade' header")
+		return u.returnError(w, r, gmhttp.StatusBadRequest, badHandshake+"'websocket' token not found in 'Upgrade' header")
 	}
 
-	if r.Method != http.MethodGet {
-		return u.returnError(w, r, http.StatusMethodNotAllowed, badHandshake+"request method is not GET")
+	if r.Method != gmhttp.MethodGet {
+		return u.returnError(w, r, gmhttp.StatusMethodNotAllowed, badHandshake+"request method is not GET")
 	}
 
 	if !tokenListContainsValue(r.Header, "Sec-Websocket-Version", "13") {
-		return u.returnError(w, r, http.StatusBadRequest, "websocket: unsupported version: 13 not found in 'Sec-Websocket-Version' header")
+		return u.returnError(w, r, gmhttp.StatusBadRequest, "websocket: unsupported version: 13 not found in 'Sec-Websocket-Version' header")
 	}
 
 	if _, ok := responseHeader["Sec-Websocket-Extensions"]; ok {
-		return u.returnError(w, r, http.StatusInternalServerError, "websocket: application specific 'Sec-WebSocket-Extensions' headers are unsupported")
+		return u.returnError(w, r, gmhttp.StatusInternalServerError, "websocket: application specific 'Sec-WebSocket-Extensions' headers are unsupported")
 	}
 
 	checkOrigin := u.CheckOrigin
@@ -151,12 +151,12 @@ func (u *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request, responseHeade
 		checkOrigin = checkSameOrigin
 	}
 	if !checkOrigin(r) {
-		return u.returnError(w, r, http.StatusForbidden, "websocket: request origin not allowed by Upgrader.CheckOrigin")
+		return u.returnError(w, r, gmhttp.StatusForbidden, "websocket: request origin not allowed by Upgrader.CheckOrigin")
 	}
 
 	challengeKey := r.Header.Get("Sec-Websocket-Key")
 	if !isValidChallengeKey(challengeKey) {
-		return u.returnError(w, r, http.StatusBadRequest, "websocket: not a websocket handshake: 'Sec-WebSocket-Key' header must be Base64 encoded value of 16-byte in length")
+		return u.returnError(w, r, gmhttp.StatusBadRequest, "websocket: not a websocket handshake: 'Sec-WebSocket-Key' header must be Base64 encoded value of 16-byte in length")
 	}
 
 	subprotocol := u.selectSubprotocol(r, responseHeader)
@@ -173,14 +173,14 @@ func (u *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request, responseHeade
 		}
 	}
 
-	h, ok := w.(http.Hijacker)
+	h, ok := w.(gmhttp.Hijacker)
 	if !ok {
-		return u.returnError(w, r, http.StatusInternalServerError, "websocket: response does not implement http.Hijacker")
+		return u.returnError(w, r, gmhttp.StatusInternalServerError, "websocket: response does not implement http.Hijacker")
 	}
 	var brw *bufio.ReadWriter
 	netConn, brw, err := h.Hijack()
 	if err != nil {
-		return u.returnError(w, r, http.StatusInternalServerError, err.Error())
+		return u.returnError(w, r, gmhttp.StatusInternalServerError, err.Error())
 	}
 
 	if brw.Reader.Buffered() > 0 {
@@ -314,12 +314,12 @@ func (u *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request, responseHeade
 // If the request is not a valid WebSocket handshake, then Upgrade returns an
 // error of type HandshakeError. Applications should handle this error by
 // replying to the client with an HTTP error response.
-func Upgrade(w http.ResponseWriter, r *http.Request, responseHeader http.Header, readBufSize, writeBufSize int) (*Conn, error) {
+func Upgrade(w gmhttp.ResponseWriter, r *gmhttp.Request, responseHeader gmhttp.Header, readBufSize, writeBufSize int) (*Conn, error) {
 	u := Upgrader{ReadBufferSize: readBufSize, WriteBufferSize: writeBufSize}
-	u.Error = func(w http.ResponseWriter, r *http.Request, status int, reason error) {
+	u.Error = func(w gmhttp.ResponseWriter, r *gmhttp.Request, status int, reason error) {
 		// don't return errors to maintain backwards compatibility
 	}
-	u.CheckOrigin = func(r *http.Request) bool {
+	u.CheckOrigin = func(r *gmhttp.Request) bool {
 		// allow all connections by default
 		return true
 	}
@@ -328,7 +328,7 @@ func Upgrade(w http.ResponseWriter, r *http.Request, responseHeader http.Header,
 
 // Subprotocols returns the subprotocols requested by the client in the
 // Sec-Websocket-Protocol header.
-func Subprotocols(r *http.Request) []string {
+func Subprotocols(r *gmhttp.Request) []string {
 	h := strings.TrimSpace(r.Header.Get("Sec-Websocket-Protocol"))
 	if h == "" {
 		return nil
@@ -342,7 +342,7 @@ func Subprotocols(r *http.Request) []string {
 
 // IsWebSocketUpgrade returns true if the client requested upgrade to the
 // WebSocket protocol.
-func IsWebSocketUpgrade(r *http.Request) bool {
+func IsWebSocketUpgrade(r *gmhttp.Request) bool {
 	return tokenListContainsValue(r.Header, "Connection", "upgrade") &&
 		tokenListContainsValue(r.Header, "Upgrade", "websocket")
 }
